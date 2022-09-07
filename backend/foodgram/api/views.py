@@ -7,10 +7,11 @@ from rest_framework.decorators import action, api_view
 from rest_framework.authtoken.models import Token
 from djoser.views import UserViewSet
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import get_user_model
 from .serializers import (IngredientRecipeSerializer, IngredientSerializer,
                           RecipeSerializer, TagSerializer, TokenSerializer, UserCreateSerializer, UserListSerializer,
                           UserPasswordSerializer)
-
+User = get_user_model()
 
 
 
@@ -36,13 +37,14 @@ class AuthToken(ObtainAuthToken):
 
 class UsersViewSet(UserViewSet):
     """Пользователи."""
-
     serializer_class = UserListSerializer
     #permission_classes = (IsAuthenticated,)
 
     def get_serializer_class(self):
         if self.request.method.lower() == 'post':
             return UserCreateSerializer
+        
+        
         return UserListSerializer
 
     def perform_create(self, serializer):

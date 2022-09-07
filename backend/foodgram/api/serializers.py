@@ -27,9 +27,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
    class Meta:
         model = User
-        fields = (
-            'id', 'email', 'username',
-            'first_name', 'last_name', 'password',)
+        fields = ('email', 'id',  'username', 'first_name', 'last_name')
 
 
 class UserPasswordSerializer(serializers.Serializer):
@@ -53,7 +51,7 @@ class RecipeUserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'email', 'id', 'username',
-            'first_name', 'last_name')
+            'first_name', 'last_name') 
 
 class TagSerializer(serializers.ModelSerializer):
 
