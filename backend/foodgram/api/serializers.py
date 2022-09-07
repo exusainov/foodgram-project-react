@@ -6,7 +6,7 @@ from django.core.files.base import ContentFile
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
 from rest_framework import serializers
 from typing_extensions import Required
-
+from rest_framework.serializers import SerializerMethodField
 User = get_user_model()
 
 class TokenSerializer(serializers.Serializer):
@@ -14,13 +14,27 @@ class TokenSerializer(serializers.Serializer):
     password = serializers.CharField(label='Пароль', style={'input_type': 'password'}, trim_whitespace=False, write_only=True)
     token = serializers.CharField(label='Токен', read_only=True)
 
+
+
+
+
+
+
 class UserListSerializer(serializers.ModelSerializer):
+
+   is_subscribed=serializers.BooleanField(read_only=True)
 
    class Meta:
         model = User
         fields = (
             'email', 'id', 'username',
-            'first_name', 'last_name')
+            'first_name', 'last_name', 'is_subscribed')
+    
+   def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return user.follower.filter(author=obj).exists()            
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -47,11 +61,19 @@ class UserPasswordSerializer(serializers.Serializer):
 
 class RecipeUserSerializer(serializers.ModelSerializer):
 
-   class Meta:
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
         model = User
         fields = (
             'email', 'id', 'username',
-            'first_name', 'last_name') 
+            'first_name', 'last_name', 'is_subscribed') 
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        if not user.is_authenticated:
+            return False
+        return user.follower.filter(author=obj).exists()
 
 class TagSerializer(serializers.ModelSerializer):
 

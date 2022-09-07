@@ -21,8 +21,6 @@ class AuthToken(ObtainAuthToken):
     serializer_class = TokenSerializer
     #permission_classes = (AllowAny,)
 
-
-
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -35,8 +33,9 @@ class AuthToken(ObtainAuthToken):
 
 
 
-class UsersViewSet(UserViewSet):
-    """Пользователи."""
+class UsersViewSet(viewsets.ModelViewSet):# UserViewSet
+    """Пользователи.""" 
+    queryset = User.objects.all()
     serializer_class = UserListSerializer
     #permission_classes = (IsAuthenticated,)
 
