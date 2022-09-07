@@ -1,11 +1,59 @@
 import base64
 import datetime as dt
-
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
 from rest_framework import serializers
 from typing_extensions import Required
 
+User = get_user_model()
+
+class TokenSerializer(serializers.Serializer):
+    email = serializers.CharField(label='Email', write_only=True)
+    password = serializers.CharField(label='Пароль', style={'input_type': 'password'}, trim_whitespace=False, write_only=True)
+    token = serializers.CharField(label='Токен', read_only=True)
+
+class UserListSerializer(serializers.ModelSerializer):
+
+   class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username',
+            'first_name', 'last_name')
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+
+   class Meta:
+        model = User
+        fields = (
+            'id', 'email', 'username',
+            'first_name', 'last_name', 'password',)
+
+
+class UserPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(
+        label='Новый пароль')
+    current_password = serializers.CharField(
+        label='Текущий пароль')
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        password = make_password(
+            validated_data.get('new_password'))
+        user.password = password
+        user.save()
+        return validated_data
+
+
+class RecipeUserSerializer(serializers.ModelSerializer):
+
+   class Meta:
+        model = User
+        fields = (
+            'email', 'id', 'username',
+            'first_name', 'last_name')
 
 class TagSerializer(serializers.ModelSerializer):
 
