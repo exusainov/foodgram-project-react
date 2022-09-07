@@ -1,7 +1,7 @@
-from django.contrib.auth import get_user_model
 from turtle import color
 from unicodedata import name
 
+from django.contrib.auth import get_user_model
 from django.db import models
 
 User = get_user_model()
@@ -11,13 +11,7 @@ GEEKS_CHOICES =(
     ("lunch", "Обед"),
     ("dinner", "Ужин"),
 )
-# Create your models here.
 
-# class Amount(models.Model):
-#     amount = models.IntegerField()
-   
-#     def __str__(self):
-#         return f'{self.amount}'
 
 class Tag(models.Model):
     name = models.TextField(choices = GEEKS_CHOICES)
