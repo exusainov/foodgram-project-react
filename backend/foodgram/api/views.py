@@ -6,23 +6,25 @@ from django.db.models.aggregates import Count, Sum
 from django.db.models.expressions import Exists, OuterRef, Value
 from django.http import FileResponse
 from djoser.views import UserViewSet
-from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
+from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag, Subscribe, FavoriteRecipe, ShoppingCart
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, status, viewsets, generics
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
                                         IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
+from api.filters import IngredientFilter, RecipeFilter
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-
+from api.permissions import IsAdminOrReadOnly
 from .serializers import (IngredientRecipeSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
                           TagSerializer, TokenSerializer, UserCreateSerializer,
-                          UserListSerializer, UserPasswordSerializer)
+                          UserListSerializer, UserPasswordSerializer, SubscribeSerializer, SubscribeRecipeSerializer)
 
 User = get_user_model()
 
@@ -44,11 +46,102 @@ class AuthToken(ObtainAuthToken):
             status=status.HTTP_201_CREATED)
 
 
+class AddAndDeleteSubscribe(
+        generics.RetrieveDestroyAPIView,
+        generics.ListCreateAPIView):
+    """Подписка и отписка от пользователя."""
 
 
-class UsersViewSet(UserViewSet):# UserViewSet viewsets.ModelViewSet
+    serializer_class = SubscribeSerializer
+
+    def get_queryset(self):
+        return self.request.user.follower.select_related(
+            'following'
+        ).prefetch_related(
+            'following__recipe'
+        ).annotate(
+            recipes_count=Count('following__recipe'),
+            is_subscribed=Value(True), )
+
+    def get_object(self):
+        user_id = self.kwargs['user_id']
+        user = get_object_or_404(User, id=user_id)
+        self.check_object_permissions(self.request, user)
+        return user
+
+    def create(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if request.user.id == instance.id:
+            return Response(
+                {'errors': 'На самого себя нельзя подписаться!'},
+                status=status.HTTP_400_BAD_REQUEST)
+        if request.user.follower.filter(author=instance).exists():
+            return Response(
+                {'errors': 'Уже подписан!'},
+                status=status.HTTP_400_BAD_REQUEST)
+        subs = request.user.follower.create(author=instance)
+        serializer = self.get_serializer(subs)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        self.request.user.follower.filter(author=instance).delete()
+
+
+class AddDeleteFavoriteRecipe(
+        generics.RetrieveDestroyAPIView,
+        generics.ListCreateAPIView):
+    """Добавление и удаление рецепта в/из избранных."""
+
+    serializer_class = SubscribeRecipeSerializer
+    permission_classes = (AllowAny,)
+
+    def get_object(self):
+        recipe_id = self.kwargs['recipe_id']
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        self.check_object_permissions(self.request, recipe)
+        return recipe
+
+    def create(self, request, *args, **kwargs):
+        instance = self.get_object()
+        request.user.favorite_recipe.recipe.add(instance)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        self.request.user.favorite_recipe.recipe.remove(instance)
+
+
+
+
+class AddDeleteShoppingCart(
+        generics.RetrieveDestroyAPIView,
+        generics.ListCreateAPIView):
+    """Добавление и удаление рецепта в/из корзины."""
+
+    serializer_class = SubscribeRecipeSerializer
+    permission_classes = (AllowAny,)
+
+    def get_object(self):
+        recipe_id = self.kwargs['recipe_id']
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        self.check_object_permissions(self.request, recipe)
+        return recipe
+
+    def create(self, request, *args, **kwargs):
+        instance = self.get_object()
+        request.user.shopping_cart.recipe.add(instance)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        self.request.user.shopping_cart.recipe.remove(instance)
+
+
+
+
+class UsersViewSet(UserViewSet):
     """Пользователи.""" 
-    #queryset = User.objects.all()
+
     serializer_class = UserListSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -65,16 +158,26 @@ class UsersViewSet(UserViewSet):# UserViewSet viewsets.ModelViewSet
 
     def get_serializer_class(self):
         if self.request.method.lower() == 'post':
-            return UserCreateSerializer
-        
-        
+            return UserCreateSerializer       
         return UserListSerializer
 
     def perform_create(self, serializer):
         password = make_password(self.request.data['password'])
         serializer.save(password=password)
 
+    @action(
+        detail=False,
+        permission_classes=(IsAuthenticated,))
+    def subscriptions(self, request):
+        """Получить на кого пользователь подписан."""
 
+        user = request.user
+        queryset = Subscribe.objects.filter(user=user)
+        pages = self.paginate_queryset(queryset)
+        serializer = SubscribeSerializer(
+            pages, many=True,
+            context={'request': request})
+        return self.get_paginated_response(serializer.data)
 
 
 @api_view(['post'])
@@ -99,6 +202,9 @@ class TagViewSet(viewsets.ModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = (IsAdminOrReadOnly,)	        
+    pagination_class=None
+
 
 class IngredientRecipeViewSet(viewsets.ModelViewSet):
     queryset = IngredientRecipe.objects.all()
@@ -107,14 +213,34 @@ class IngredientRecipeViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Рецепты."""
-    
+       
     queryset = Recipe.objects.all()
+    filterset_class = RecipeFilter
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return RecipeReadSerializer
         return RecipeWriteSerializer
+
+    def get_queryset(self):
+        return Recipe.objects.annotate(
+            is_favorited=Exists(
+                FavoriteRecipe.objects.filter(
+                    user=self.request.user, recipe=OuterRef('id'))),
+            is_in_shopping_cart=Exists(
+                ShoppingCart.objects.filter(
+                    user=self.request.user,
+                    recipe=OuterRef('id')))
+        ).select_related('author').prefetch_related(
+            'tags', 'ingredients', 'recipe',
+            'shopping_cart', 'favorite_recipe'
+        ) if self.request.user.is_authenticated else Recipe.objects.annotate(
+            is_in_shopping_cart=Value(False),
+            is_favorited=Value(False),
+        ).select_related('author').prefetch_related(
+            'tags', 'ingredients', 'recipe',
+            'shopping_cart', 'favorite_recipe')
 
 
     def perform_create(self, serializer):
@@ -169,5 +295,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Список ингредиентов."""
 
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer     
+    filterset_class = IngredientFilter
+    permission_classes = (IsAdminOrReadOnly,)	        
+    pagination_class=None

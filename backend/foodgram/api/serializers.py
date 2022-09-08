@@ -92,10 +92,12 @@ class Base64ImageField(serializers.ImageField):
 
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
-    
-    id = serializers.IntegerField(source='ingredient.id')
-    name = serializers.CharField(source='ingredient.name', read_only=True)
-    measurement_unit = serializers.CharField(source='ingredient.measurement_unit', read_only=True)
+    id = serializers.ReadOnlyField(
+        source='ingredient.id')
+    name = serializers.ReadOnlyField(
+        source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit')
 
 
     class Meta:
@@ -137,9 +139,8 @@ class IngredientsEditSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
-    image = Base64ImageField(
-        max_length=None,
-        use_url=True)
+    image = Base64ImageField(required=False, allow_null=True)#   max_length=None,  use_url=True
+
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all())
