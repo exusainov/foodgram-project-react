@@ -1,7 +1,8 @@
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
 from .views import *
 
 app_name = 'api'
@@ -13,6 +14,7 @@ router.register('ingredients', IngredientViewSet)
 router.register('recipes', RecipeViewSet)
 
 urlpatterns = [
+    #path('recipes/download_shopping_cart/', DownloadShoppingCart.as_view()),  
     path('auth/token/login', AuthToken.as_view(), name='login'),
     path('users/set_password/', set_password, name='set_password'),
     path('users/<int:user_id>/subscribe/',

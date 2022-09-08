@@ -1,3 +1,4 @@
+
 import io
 
 from django.contrib.auth import get_user_model
@@ -5,26 +6,31 @@ from django.contrib.auth.hashers import make_password
 from django.db.models.aggregates import Count, Sum
 from django.db.models.expressions import Exists, OuterRef, Value
 from django.http import FileResponse
+from django.shortcuts import HttpResponse, get_object_or_404
 from djoser.views import UserViewSet
-from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag, Subscribe, FavoriteRecipe, ShoppingCart
+from recipes.models import (FavoriteRecipe, Ingredient, IngredientRecipe,
+                            Recipe, ShoppingCart, Subscribe, Tag)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import mixins, status, viewsets, generics
+from rest_framework import generics, mixins, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action, api_view
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
                                         IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
-from api.filters import IngredientFilter, RecipeFilter
-from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import IsAdminOrReadOnly
+
 from .serializers import (IngredientRecipeSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
+                          SubscribeRecipeSerializer, SubscribeSerializer,
                           TagSerializer, TokenSerializer, UserCreateSerializer,
-                          UserListSerializer, UserPasswordSerializer, SubscribeSerializer, SubscribeRecipeSerializer)
+                          UserListSerializer, UserPasswordSerializer)
 
 User = get_user_model()
 
@@ -249,14 +255,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=['get'],
-        permission_classes=(IsAuthenticated,))
+        permission_classes=(IsAuthenticated,))    
     
     def download_shopping_cart(self, request):
+ 
         """Качаем список с ингредиентами."""
-
         buffer = io.BytesIO()
         page = canvas.Canvas(buffer)
-        pdfmetrics.registerFont(TTFont('Vera', 'Vera.ttf'))
+        pdfmetrics.registerFont(TTFont('Handicraft', 'data/Handicraft.ttf', 'UTF-8'))
         x_position, y_position = 50, 800
         shopping_cart = (
             request.user.shopping_cart.recipe.
@@ -264,7 +270,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 'ingredients__name',
                 'ingredients__measurement_unit'
             ).annotate(amount=Sum('recipe__amount')).order_by())
-        page.setFont('Vera', 14)
+        page.setFont('Handicraft', size=14)
         if shopping_cart:
             indent = 20
             page.drawString(x_position, y_position, 'Cписок покупок:')
@@ -282,7 +288,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             buffer.seek(0)
             return FileResponse(
                 buffer, as_attachment=True, filename=FILENAME)
-        page.setFont('Vera', 24)
+        page.setFont('Handicraft', size=24) #  'Vera', 24
         page.drawString(
             x_position,
             y_position,
