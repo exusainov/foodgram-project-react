@@ -37,6 +37,11 @@ pip install -r requirements.txt
 ```
 python manage.py migrate
 ```
+Заполнение ингредиентов и тегов в базу:
+```
+python manage.py load_ingrs
+python manage.py load_tags
+```
 
 Запустить проект:
 
