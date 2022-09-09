@@ -1,45 +1,44 @@
 import base64
-import datetime as dt
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Subscribe, Tag
 from rest_framework import serializers
-from rest_framework.serializers import SerializerMethodField
-from typing_extensions import Required
 
 User = get_user_model()
 
+
 class TokenSerializer(serializers.Serializer):
     email = serializers.CharField(label='Email', write_only=True)
-    password = serializers.CharField(label='Пароль', style={'input_type': 'password'}, trim_whitespace=False, write_only=True)
+    password = serializers.CharField(
+        label='Пароль',
+        style={'input_type': 'password'},
+        trim_whitespace=False, write_only=True)
     token = serializers.CharField(label='Токен', read_only=True)
 
 
-
 class UserListSerializer(serializers.ModelSerializer):
-
-    is_subscribed=serializers.BooleanField(read_only=True)
+    is_subscribed = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
         fields = (
             'email', 'id', 'username',
             'first_name', 'last_name', 'is_subscribed')
-    
+
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
         if not user.is_authenticated:
             return False
-        return user.follower.filter(author=obj).exists()            
+        return user.follower.filter(author=obj).exists()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'id',  'username', 'first_name', 'last_name')
+        fields = ('email', 'id', 'username', 'first_name', 'last_name')
 
 
 class UserPasswordSerializer(serializers.Serializer):
@@ -57,7 +56,6 @@ class UserPasswordSerializer(serializers.Serializer):
         return validated_data
 
 
-
 class RecipeUserSerializer(serializers.ModelSerializer):
 
     is_subscribed = serializers.SerializerMethodField(read_only=True)
@@ -66,7 +64,7 @@ class RecipeUserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'email', 'id', 'username',
-            'first_name', 'last_name', 'is_subscribed') 
+            'first_name', 'last_name', 'is_subscribed')
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
@@ -74,11 +72,13 @@ class RecipeUserSerializer(serializers.ModelSerializer):
             return False
         return user.follower.filter(author=obj).exists()
 
+
 class TagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tag
         fields = ('id', 'name', 'slug', 'color')
+
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
@@ -99,11 +99,9 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit')
 
-
     class Meta:
         model = IngredientRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount')
-
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -111,7 +109,7 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
-        read_only_fields = ('measurement_unit', 'name') 
+        read_only_fields = ('measurement_unit', 'name')
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -139,7 +137,7 @@ class IngredientsEditSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
-    image = Base64ImageField(required=False, allow_null=True)#   max_length=None,  use_url=True
+    image = Base64ImageField(required=False, allow_null=True)
 
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -194,7 +192,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     author = RecipeUserSerializer(
         read_only=True,
         default=serializers.CurrentUserDefault())
-    ingredients = RecipeIngredientSerializer(
+    ingredients = IngredientRecipeSerializer(
         many=True,
         required=True,
         source='recipe')

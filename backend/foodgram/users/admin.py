@@ -10,5 +10,5 @@ class UserAdmin(admin.ModelAdmin):
         'id', 'username', 'email',
         'first_name', 'last_name', 'date_joined',)
     search_fields = ('email', 'username', 'first_name', 'last_name')
-    list_filter = ('date_joined', 'email', 'first_name')
+    list_filter = ('email', 'username')
     empty_value_display = '-пусто-'

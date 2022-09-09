@@ -20,7 +20,7 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = (
         'name', 'cooking_time',
         'author__email', 'ingredients__name')
-    list_filter = ('tags',)
+    list_filter = ('author', 'name', 'tags')
     inlines = (RecipeIngredientAdmin,)
     empty_value_display = EMPTY_MSG
 
@@ -34,7 +34,7 @@ class RecipeAdmin(admin.ModelAdmin):
         list_ = [_.name for _ in obj.tags.all()]
         return ', '.join(list_)
 
-    @admin.display(description=' Ингредиенты ')
+    @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):
         return '\n '.join([
             f'{item["ingredient__name"]} - {item["amount"]}'
@@ -60,8 +60,7 @@ class TagAdmin(admin.ModelAdmin):
 class IngredientAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'name', 'measurement_unit',)
-    search_fields = (
-        'name', 'measurement_unit',)
+    search_fields = ('name',)
     empty_value_display = EMPTY_MSG
 
 

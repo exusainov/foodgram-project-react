@@ -1,4 +1,3 @@
-from tabnanny import verbose
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -6,8 +5,6 @@ from django.db import models
 class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
-
-    #username = models.CharField(max_length=150, unique=True)
 
     email = models.EmailField('Почта', max_length=200, unique=True)
     first_name = models.TextField('Имя', max_length=150)
