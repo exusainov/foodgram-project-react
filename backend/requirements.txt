@@ -16,6 +16,7 @@ djangorestframework==3.12.4
 djangorestframework-simplejwt==4.8.0
 djoser==2.1.0
 fpdf==1.7.2
+gunicorn==20.1.0
 idna==3.3
 itypes==1.2.0
 Jinja2==3.1.2
@@ -25,7 +26,6 @@ oauthlib==3.2.0
 pathspec==0.9.0
 Pillow==9.2.0
 platformdirs==2.5.2
-psycopg2==2.9.3
 psycopg2-binary==2.9.3
 pycparser==2.21
 PyJWT==2.1.0
