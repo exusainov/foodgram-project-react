@@ -1,5 +1,6 @@
 
 import io
+from urllib import request
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
@@ -30,6 +31,8 @@ from .serializers import (IngredientRecipeSerializer, IngredientSerializer,
                           SubscribeRecipeSerializer, SubscribeSerializer,
                           TagSerializer, TokenSerializer, UserCreateSerializer,
                           UserListSerializer, UserPasswordSerializer)
+
+#from .utils import download_shopping_c
 
 User = get_user_model()
 
@@ -244,12 +247,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
+    
     @action(
         detail=False,
         methods=['get'],
         permission_classes=(IsAuthenticated,))
+    #download_shopping_cart(request.user)
     def download_shopping_cart(self, request):
+        #download_shopping_c(request.user)
         """Качаем список с ингредиентами."""
         buffer = io.BytesIO()
         page = canvas.Canvas(buffer)

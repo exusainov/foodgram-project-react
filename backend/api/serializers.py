@@ -3,6 +3,9 @@ import base64
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.core.files.base import ContentFile
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from drf_base64.fields import Base64ImageField
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Subscribe, Tag
 from rest_framework import serializers
 
@@ -58,7 +61,7 @@ class UserPasswordSerializer(serializers.Serializer):
 
 class RecipeUserSerializer(serializers.ModelSerializer):
 
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    is_subscribed = serializers.SerializerMethodField(method_name='get_is_subscribed', read_only=True)
 
     class Meta:
         model = User
@@ -80,15 +83,15 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'slug', 'color')
 
 
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
+# class Base64ImageField(serializers.ImageField):
+#     def to_internal_value(self, data):
+#         if isinstance(data, str) and data.startswith('data:image'):
+#             format, imgstr = data.split(';base64,')
+#             ext = format.split('/')[-1]
 
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+#             data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
 
-        return super().to_internal_value(data)
+#         return super().to_internal_value(data)
 
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
@@ -136,6 +139,42 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('author',)
 
+    def validate(self, data):
+        ingredients = data['ingredients']
+        ingredient_list = []
+        for items in ingredients:
+            ingredient = get_object_or_404(
+                Ingredient, id=items['id'])
+            if ingredient in ingredient_list:
+                raise serializers.ValidationError(
+                    'Ингредиент должен быть уникальным!')
+            ingredient_list.append(ingredient)
+        tags = data['tags']
+        if not tags:
+            raise serializers.ValidationError(
+                'Нужен хотя бы один тэг для рецепта!')
+        for tag_name in tags:
+            if not Tag.objects.filter(name=tag_name).exists():
+                raise serializers.ValidationError(
+                    f'Тэга {tag_name} не существует!')
+        return data
+
+    def validate_cooking_time(self, cooking_time):
+        if int(cooking_time) < 1:
+            raise serializers.ValidationError(
+                'Время приготовления >= 1!')
+        return cooking_time
+
+    def validate_ingredients(self, ingredients):
+        if not ingredients:
+            raise serializers.ValidationError(
+                'Мин. 1 ингредиент в рецепте!')
+        for ingredient in ingredients:
+            if int(ingredient.get('amount')) < 1:
+                raise serializers.ValidationError(
+                    'Количество ингредиента >= 1!')
+        return ingredients        
+
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
             IngredientRecipe.objects.create(
@@ -143,6 +182,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 ingredient_id=ingredient.get('id'),
                 amount=ingredient.get('amount'), )
 
+    @transaction.atomic
     def create(self, validated_data):
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
@@ -210,7 +250,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
         source='author.first_name')
     last_name = serializers.CharField(
         source='author.last_name')
-    recipes = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField(method_name='get_recipes')
     is_subscribed = serializers.BooleanField(
         read_only=True)
     recipes_count = serializers.IntegerField(

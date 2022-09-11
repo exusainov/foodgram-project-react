@@ -1,8 +1,7 @@
-from django.core.exceptions import ValidationError
 import django_filters as filters
-
-from users.models import User
+from django.core.exceptions import ValidationError
 from recipes.models import Ingredient, Recipe
+from users.models import User
 
 
 class TagsMultipleChoiceField(
@@ -47,4 +46,4 @@ class RecipeFilter(filters.FilterSet):
 
     class Meta:
         model = Recipe
-        fields = ['is_favorited', 'is_in_shopping_cart', 'author', 'tags']
+        fields = ('is_favorited', 'is_in_shopping_cart', 'author', 'tags')

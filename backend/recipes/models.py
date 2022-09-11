@@ -5,27 +5,31 @@ from django.dispatch import receiver
 
 User = get_user_model()
 
-GEEKS_CHOICES =(
-    ("breakfast", "Завтрак"),
-    ("lunch", "Обед"),
-    ("dinner", "Ужин"),
-)
-
-
 class Tag(models.Model):
-    name = models.CharField('Имя',max_length=48, unique=True)
-    color = models.CharField(max_length=48, unique = True)
-    slug = models.SlugField(max_length = 100, unique = True)
-    
+    name = models.CharField('Имя', max_length=48, unique=True)
+    color = models.CharField('Цвет', max_length=48, unique = True)
+    slug = models.SlugField('Ссылка', max_length = 100, unique = True)
+
+    class Meta:
+        verbose_name = 'Тэг'
+        verbose_name_plural = 'Тэги'
+        ordering = ('-id',) 
+
     def __str__(self):
         return self.name
 
 class Ingredient(models.Model):
-    name = models.CharField(max_length=225)
-    measurement_unit = models.CharField(max_length=225)
+    name = models.CharField('Название ингредиента', max_length=225)
+    measurement_unit = models.CharField('Единица измерения ингредиента', max_length=225)
     
     class Meta:
-        ordering = ['name']
+        ordering = ('name',)
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique name')]
 
     def __str__(self):
         return f'{self.name}, {self.measurement_unit}.'
@@ -49,7 +53,7 @@ class Recipe(models.Model):
         related_name='recipes') 
 
     class Meta:
-        ordering = ['id']
+        ordering = ('-id',)
 
     def __str__(self):
         return f'{self.author.email}, {self.name}'
@@ -58,7 +62,7 @@ class Recipe(models.Model):
 class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(Ingredient, related_name='ingredient', on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, related_name='recipe', on_delete=models.CASCADE)
-    amount = models.IntegerField()
+    amount = models.IntegerField(verbose_name='Количество')
 
     def __str__(self):
         return f'{self.amount}'    
@@ -85,7 +89,7 @@ class Subscribe(models.Model):
     class Meta:	                
         verbose_name = 'Подписка'	               
         verbose_name_plural = 'Подписки'	               
-        ordering = ['-id']	               
+        ordering = ('-id',)             
         constraints = [	               
             models.UniqueConstraint(	              
                 fields=['user', 'author'],	               
@@ -138,7 +142,7 @@ class ShoppingCart(models.Model):
     class Meta:
         verbose_name = 'Покупка'
         verbose_name_plural = 'Покупки'
-        ordering = ['-id']
+        ordering = ('-id',)
 
     def __str__(self):
         list_ = [item['name'] for item in self.recipe.values('name')]
