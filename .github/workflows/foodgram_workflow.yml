@@ -39,14 +39,15 @@ jobs:
           - name: Push to Docker Hub
             uses: docker/build-push-action@v2 
             with:
-              context: backend/
               push: true
+              context: backend/
+
               tags: exusainov/foodgram_backend:latest
           - name: Push frontend
             uses: docker/build-push-action@v2 
             with:
-              context: frontend/
               push: true
+              context: frontend/              
               tags: exusainov/foodgram_frontend:latest
 
   deploy:
@@ -62,8 +63,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
-            sudo docker pull exusainov/foodgram_backend:v11.09.2022
-            sudo docker pull exusainov/foodgram_frontend:v09.09.2022
+            sudo docker pull exusainov/foodgram_backend:latest
+            sudo docker pull exusainov/foodgram_frontend:latest
             cd infra/
             sudo docker-compose stop
             sudo docker-compose rm backend
@@ -72,10 +73,9 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_KEY }}
+          key: ${{ secrets.SSH_KEY }} 
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
-            cd infra/
             sudo touch .env
             echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
             echo DB_NAME=${{ secrets.DB_NAME }} >> .env
