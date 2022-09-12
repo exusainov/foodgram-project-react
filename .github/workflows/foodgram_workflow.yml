@@ -62,8 +62,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
-            sudo docker pull exusainov/foodgram_backend:latest
-            sudo docker pull exusainov/foodgram_frontend:latest
+            sudo docker pull exusainov/foodgram_backend:v11.09.2022
+            sudo docker pull exusainov/foodgram_frontend:v09.09.2022
             cd infra/
             sudo docker-compose stop
             sudo docker-compose rm backend

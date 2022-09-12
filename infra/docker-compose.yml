@@ -9,9 +9,7 @@ services:
       - ./.env
 
   backend:
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
+    image: exusainov/foodgram_backend:v11.09.2022
     restart: always
     volumes:
       - data_value:/code/data/
