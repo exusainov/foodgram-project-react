@@ -32,7 +32,7 @@ from .serializers import (IngredientRecipeSerializer, IngredientSerializer,
                           TagSerializer, TokenSerializer, UserCreateSerializer,
                           UserListSerializer, UserPasswordSerializer)
 
-#from .utils import download_shopping_c
+#from .utils import download_shopping_cart_
 
 User = get_user_model()
 
@@ -252,10 +252,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=['get'],
         permission_classes=(IsAuthenticated,))
-    #download_shopping_cart(request.user)
+
     def download_shopping_cart(self, request):
-        #download_shopping_c(request.user)
         """Качаем список с ингредиентами."""
+        #return download_shopping_cart_(self.request.user)
+
+        #download_shopping_c(request.user)
+        #"""Качаем список с ингредиентами."""
         buffer = io.BytesIO()
         page = canvas.Canvas(buffer)
         pdfmetrics.registerFont(TTFont('Handicraft', 'data/Handicraft.ttf',

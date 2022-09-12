@@ -10,12 +10,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 #SECRET_KEY = os.getenv('SECRET_KEY')
-SECRET_KEY = 'grue9w^_8oq*t#skc0o!q3evkxisg0zor5v_smw^@6wf!r-irv'
-
+#SECRET_KEY = 'grue9w^_8oq*t#skc0o!q3evkxisg0zor5v_smw^@6wf!r-irv'
+SECRET_KEY = (
+    'SECRET_KEY',
+    'my_mega_secret_code_ilz@4zqj=rq&agdol^##zgl9(vs')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['exusainov.ddns.net', '127.0.0.1', 'localhost', '158.160.9.212', '*']
 
 
 # Application definition

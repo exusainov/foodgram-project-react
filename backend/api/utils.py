@@ -11,7 +11,7 @@ from reportlab.pdfgen import canvas
 
 FILENAME = 'shopping_cart.pdf'
 
-def download_shopping_c(request):
+def download_shopping_cart_(request):
     """Качаем список с ингредиентами."""
     buffer = io.BytesIO()
     page = canvas.Canvas(buffer)
@@ -38,10 +38,10 @@ def download_shopping_c(request):
             if y_position <= 50:
                 page.showPage()
                 y_position = 800
-        page.save()
-        buffer.seek(0)
-        return FileResponse(
-            buffer, as_attachment=True, filename=FILENAME)
+            page.save()
+            buffer.seek(0)
+            return FileResponse(
+                buffer, as_attachment=True, filename=FILENAME)
         page.setFont('Handicraft', size=24)
         page.drawString(
             x_position,
