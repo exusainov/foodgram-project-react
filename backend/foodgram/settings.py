@@ -16,7 +16,7 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['exusainov.ddns.net', '127.0.0.1', 'localhost', '158.160.9.212', '*']
+ALLOWED_HOSTS = ['exusainov.ddns.net', '127.0.0.1', 'localhost', '51.250.18.250', '*']
 
 
 # Application definition
