@@ -1,11 +1,9 @@
-import base64
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
-from django.core.files.base import ContentFile
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_base64.fields import Base64ImageField
+
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Subscribe, Tag
 from rest_framework import serializers
 
@@ -61,7 +59,8 @@ class UserPasswordSerializer(serializers.Serializer):
 
 class RecipeUserSerializer(serializers.ModelSerializer):
 
-    is_subscribed = serializers.SerializerMethodField(method_name='get_is_subscribed', read_only=True)
+    is_subscribed = serializers.SerializerMethodField(
+        method_name='get_is_subscribed', read_only=True)
 
     class Meta:
         model = User
@@ -173,7 +172,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             if int(ingredient.get('amount')) < 1:
                 raise serializers.ValidationError(
                     'Количество ингредиента >= 1!')
-        return ingredients        
+        return ingredients
 
     def create_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
