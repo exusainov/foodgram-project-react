@@ -17,28 +17,20 @@ Cоздать и активировать виртуальное окружен�
 
 ```
 python -m venv venv
-```
-
-```
 source venv/Scripts/activate
 ```
-
-```
-python -m pip install --upgrade pip
-```
-
 Установить зависимости из файла requirements.txt:
 
 ```
 cd backend
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
 Выполнить миграции:
 
-```
-python manage.py migrate
-```
+* python manage.py migrate
+
 Создать суперпользователя:
 ​
 ```
@@ -58,7 +50,7 @@ python manage.py runserver
 ```
 # Шаблон наполнение .env
 
-Создать файл .env в папке infra/:
+Создать файл .env на основе .env.example в папке infra/:
 
 ```
 DB_ENGINE=django.db.backends.postgresql # указываем, что работаем с postgresql
@@ -95,6 +87,4 @@ Python3, Django, HTTP, Django Rest Framework, PostgreSQL, Docker, YandexCloud
 # Авторы
 ​
 - Хусаинов Евгений Маратович (Exusainov@yandex.com)
-- IP Адрес http://exusainov.ddns.net/  IP - 158.160.1.215
-- Логин test@gmail.com
-- Пароль 2998441Ares
+​- IP Адрес http://exusainov.ddns.net/  IP - 158.160.1.215
