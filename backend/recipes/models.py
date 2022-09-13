@@ -45,7 +45,7 @@ class Recipe(models.Model):
         related_name='recipe',
         verbose_name='Автор')
     name = models.CharField('Название рецепта', max_length=255)
-    text = models.CharField('Описание рецепта', max_length=255)
+    text = models.CharField('Описание рецепта',)
     ingredients = models.ManyToManyField(
         Ingredient,
         related_name='ingredientsrecipes',
