@@ -18,7 +18,7 @@ class TagsMultipleChoiceField(
                     self.error_messages['invalid_choice'],
                     code='invalid_choice',
                     params={'value': val},)
-
+        
 
 class TagsFilter(filters.AllValuesMultipleFilter):
     field_class = TagsMultipleChoiceField
